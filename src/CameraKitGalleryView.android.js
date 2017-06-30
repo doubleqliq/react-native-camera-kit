@@ -10,12 +10,14 @@ const resolveAssetSource = require('react-native/Libraries/Image/resolveAssetSou
 const GalleryView = requireNativeComponent('GalleryView', null);
 const ALL_PHOTOS = 'All Photos';
 const COMMAND_REFRESH_GALLERY = 1;
+const COMMAND_UNSELECT_IMAGE = 2;
 
 export default class CameraKitGalleryView extends Component {
 
   constructor(props) {
     super(props);
     this.onTapImage = this.onTapImage.bind(this);
+    this.unselectImage = this.unselectImage.bind(this);
   }
 
   async refreshGalleryView(lastEditedImage = '') {
@@ -25,6 +27,14 @@ export default class CameraKitGalleryView extends Component {
         [lastEditedImage]
     );
     return true;
+  }
+
+  unselectImage(uri) {
+    UIManager.dispatchViewManagerCommand(
+      ReactNative.findNodeHandle(this),
+      COMMAND_UNSELECT_IMAGE,
+      [uri]
+    );
   }
 
   modifyGalleryViewContentOffset (offset) {

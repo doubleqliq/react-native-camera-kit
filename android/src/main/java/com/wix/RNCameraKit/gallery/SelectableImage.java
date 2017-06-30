@@ -106,8 +106,7 @@ public class SelectableImage extends FrameLayout {
     }
 
     public void bind(ThreadPoolExecutor executor, boolean selected, boolean forceBind, final Integer id, boolean supported) {
-        this.selected = selected;
-        selectedView.setImageDrawable(selected ? selectedDrawable : unselectedDrawable);
+        this.setSelected(selected);
         if (this.id != id || forceBind) {
             this.id = id;
             imageView.setImageBitmap(null);

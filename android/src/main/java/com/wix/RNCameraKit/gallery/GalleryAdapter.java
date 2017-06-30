@@ -113,7 +113,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
                 return;
             }
 
-            onTapImage(image.uri, image.width, image.height, image,date, image.latitude, image.longitude);
+            onTapImage(image.uri, image.width, image.height, image.date, image.latitude, image.longitude);
             v.setSelected(!isSelected);
         }
 
@@ -321,7 +321,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
         }
 
         if (shouldShowCustomButton()) {
-            images.add(new Image(null, -1, "", 0, 0, 0, 0, 0));
+            images.add(new Image(null, -1, "", 0, 0, 0L, 0d, 0d));
         }
         Collections.reverse(images);
         cursor.close();

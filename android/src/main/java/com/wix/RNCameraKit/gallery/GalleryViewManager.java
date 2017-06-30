@@ -255,12 +255,7 @@ public class GalleryViewManager extends SimpleViewManager<GalleryView> {
     }
 
     public void unselectImage(final GalleryView view, final String uri) {
-        dispatchOnConfigJobQueue(new Runnable() {
-            @Override
-            public void run() {
-                getViewAdapter(view).unselectImage(uri);
-            }
-        });
+        getViewAdapter(view).unselectImage(uri);
     }
 
     private void dispatchOnConfigJobQueue(Runnable runnable) {

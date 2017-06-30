@@ -210,7 +210,14 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
             }
         }
         if (selectedImage != null) {
-            // Unselect image
+            AbsViewHolder holder = (AbsViewHolder) view.findViewHolderForAdapterPosition(selectedImage);
+
+            if (holder != null) {
+                SelectableImage sImage = (SelectableImage) holder.itemView;
+                if (sImage != null) {
+                    sImage.setSelected(false);
+                }
+            }
         }
     }
 

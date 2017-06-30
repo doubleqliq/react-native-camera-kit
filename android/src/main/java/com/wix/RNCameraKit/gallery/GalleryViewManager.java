@@ -22,6 +22,7 @@ import static com.wix.RNCameraKit.Utils.*;
 public class GalleryViewManager extends SimpleViewManager<GalleryView> {
 
     private static final int COMMAND_REFRESH_GALLERY = 1;
+    private static final int COMMAND_UNSELECT_IMAGE = 2;
 
     private final String UNSUPPORTED_IMAGE_KEY = "unsupportedImage";
     private final String UNSUPPORTED_TEXT_KEY = "unsupportedText";
@@ -237,7 +238,10 @@ public class GalleryViewManager extends SimpleViewManager<GalleryView> {
     @Nullable
     @Override
     public Map<String, Integer> getCommandsMap() {
-        return MapBuilder.of("refreshGalleryView", COMMAND_REFRESH_GALLERY);
+        return MapBuilder.of(
+                "refreshGalleryView", COMMAND_REFRESH_GALLERY,
+                "unselectImage", COMMAND_UNSELECT_IMAGE
+                );
     }
 
     @Override
@@ -245,6 +249,18 @@ public class GalleryViewManager extends SimpleViewManager<GalleryView> {
         if (commandId == COMMAND_REFRESH_GALLERY) {
             dispatchRefreshDataOnJobQueue(view, true);
         }
+        if (commandId == COMMAND_UNSELECT_IMAGE) {
+            unselectImage(view, args.getString(0));
+        }
+    }
+
+    public void unselectImage(final GalleryView view, final String uri) {
+        dispatchOnConfigJobQueue(new Runnable() {
+            @Override
+            public void run() {
+                getViewAdapter(view).unselectImage(uri);
+            }
+        });
     }
 
     private void dispatchOnConfigJobQueue(Runnable runnable) {

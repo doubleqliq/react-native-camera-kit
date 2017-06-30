@@ -201,6 +201,19 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
         this.selectedUris = selectedUris;
     }
 
+    public void unselectImage(String uri) {
+        Integer selectedImage = null;
+        for (Image image: images) {
+            if (image.uri.equals(uri)) {
+                selectedImage = images.indexOf(image);
+                break;
+            }
+        }
+        if (selectedImage != null) {
+            // Unselect image
+        }
+    }
+
     void setDirtyUris(List<String> dirtyUris) {
         this.dirtyUris = dirtyUris;
 

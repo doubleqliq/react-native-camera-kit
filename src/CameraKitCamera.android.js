@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 
 const NativeCamera = requireNativeComponent('CameraView', null);
-const NativeCameraModule = NativeModules.CameraModule;
+const NativeCameraModule = NativeModules.RNCameraModule;
 
 export default class CameraKitCamera extends React.Component {
 

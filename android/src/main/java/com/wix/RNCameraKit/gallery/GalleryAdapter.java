@@ -106,7 +106,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
             selectableImageView.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View view, MotionEvent motionEvent) {
-                    if (motionEvent.getAction() == MotionEvent.ACTION_UP && longClickStarted) {
+                    if ((motionEvent.getAction() == MotionEvent.ACTION_UP || motionEvent.getAction() == MotionEvent.TOOL_TYPE_MOUSE) && longClickStarted) {
                         onLongPress(image.uri, image.width, image.height, image.date, image.latitude, image.longitude, true);
                         longClickStarted = false;
                     }

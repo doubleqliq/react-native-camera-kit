@@ -232,6 +232,7 @@ public class GalleryViewManager extends SimpleViewManager<GalleryView> {
         return MapBuilder.builder()
                 .put("onTapImage", MapBuilder.of("registrationName", "onTapImage"))
                 .put("onCustomButtonPress", MapBuilder.of("registrationName", "onCustomButtonPress"))
+                .put("onLongPress", MapBuilder.of("registrationName", "onLongPress"))
                 .build();
     }
 

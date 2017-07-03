@@ -17,6 +17,7 @@ export default class CameraKitGalleryView extends Component {
   constructor(props) {
     super(props);
     this.onTapImage = this.onTapImage.bind(this);
+    this.onLongPress = this.onLongPress.bind(this);
     this.unselectImage = this.unselectImage.bind(this);
   }
 
@@ -88,12 +89,18 @@ export default class CameraKitGalleryView extends Component {
       _.update(transformedProps, 'selection.overlayColor', (color) => processColor(selectionOverlayColor));
     }
 
-    return <GalleryView {...transformedProps} onTapImage={this.onTapImage}/>
+    return <GalleryView {...transformedProps} onTapImage={this.onTapImage} onLongPress={this.onLongPress}/>
   }
 
   onTapImage(event) {
     if(this.props.onTapImage) {
       this.props.onTapImage(event);
+    }
+  }
+
+  onLongPress(event) {
+    if (this.props.onLongPress) {
+      this.props.onLongPress(event);
     }
   }
 

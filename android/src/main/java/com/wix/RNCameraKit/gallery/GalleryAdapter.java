@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 import android.provider.MediaStore;
 import android.support.v7.widget.RecyclerView;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -79,9 +80,10 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
         public abstract void bind(int position);
     }
 
-    class ImageHolder extends AbsViewHolder implements View.OnClickListener {
+    class ImageHolder extends AbsViewHolder implements View.OnClickListener, View.OnLongClickListener {
         Image image;
         boolean isSupported = true;
+        boolean longClickStarted = false;
 
         ImageHolder(SelectableImage itemView) {
             super(itemView);
@@ -100,6 +102,24 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
             selectableImageView.setDrawables(selectedDrawable, unselectedDrawable, selectionOverlayColor);
             selectableImageView.bind(executor, selected, forceBind, image.id, isSupported);
             selectableImageView.setOnClickListener(this);
+            selectableImageView.setOnLongClickListener(this);
+            selectableImageView.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View view, MotionEvent motionEvent) {
+                    if (motionEvent.getAction() == MotionEvent.ACTION_UP && longClickStarted) {
+                        onLongPress(image.uri, image.width, image.height, image.date, image.latitude, image.longitude, true);
+                        longClickStarted = false;
+                    }
+                    return false;
+                }
+            });
+        }
+
+        @Override
+        public boolean onLongClick(View view) {
+            onLongPress(image.uri, image.width, image.height, image.date, image.latitude, image.longitude, false);
+            longClickStarted = true;
+            return true;
         }
 
         @Override
@@ -405,6 +425,11 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
 
     private boolean shouldShowCustomButton() {
         return customButtonImage != null;
+    }
+
+    public void onLongPress(String uri, Integer width, Integer height, Long date, Double latitude, Double longitude, boolean touchEnd) {
+        final ReactContext reactContext = ((ReactContext) view.getContext());
+        reactContext.getNativeModule(UIManagerModule.class).getEventDispatcher().dispatchEvent(new LongPressImageEvent(getRootViewId(), uri, width, height, date, latitude, longitude, touchEnd));
     }
 
     public void onTapImage(String uri, Integer width, Integer height, Long date, Double latitude, Double longitude) {

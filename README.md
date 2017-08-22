@@ -42,7 +42,7 @@ Then add to your app `app/build.gradle` in the `dependencies` section:
 + compile project(":rncamerakit")
 ```
 
-Then in `MainActivity.java` add:
+Then in `MainApplication.java` add:
 
 ```diff
 + import com.wix.RNCameraKit.RNCameraKitPackage;
@@ -54,9 +54,9 @@ And in the package list in the same file (e.g. `getPackages`) add:
 + new RNCameraKitPackage()
 ```
 
-## How to use
+## APIs
 
-### CameraKitCamera inside the `render` function
+### CameraKitCamera - Camera component 
 
 ```js
 <CameraKitCamera
@@ -79,11 +79,11 @@ And in the package list in the same file (e.g. `getPackages`) add:
 
 Attribute         | Values                 | Description
 ----------------- | ---------------------- | -----------
-flashMode         |`'on'`/`'off'`/`'auto'` | camera flash mode (default is `auto`)
-focusMode         | `'on'`/`'off'`         | camera focus mode (default is `on`)
-zoomMode          | `'on'`/`'off'`         | camera zoom mode
-ratioOverlay      | `['int':'int', ...]`   | overlay on top of the camera view (crop the image to the selected size) Example: `['16:9', '1:1', '3:4']`
-ratioOverlayColor |  Color                 | any color with alpha (default is ```'#ffffff77'```)
+`flashMode`         |`'on'`/`'off'`/`'auto'` | camera flash mode (default is `auto`)
+`focusMode`         | `'on'`/`'off'`         | camera focus mode (default is `on`)
+`zoomMode`          | `'on'`/`'off'`         | camera zoom mode
+`ratioOverlay`      | `['int':'int', ...]`   | overlay on top of the camera view (crop the image to the selected size) Example: `['16:9', '1:1', '3:4']`
+`ratioOverlayColor` |  Color                 | any color with alpha (default is ```'#ffffff77'```)
 
 
 ### CameraKitCamera API
@@ -112,15 +112,15 @@ const isUserAuthorizedCamera = await CameraKitCamera.requestDeviceCameraAuthoriz
 
 otherwise, returns `false`
 
-#### capture
+#### capture - must have the wanted camera capture reference
 
-Capture image
+Capture image (`shouldSaveToCameraRoll: boolean`)
 
 ```js
 const image = await this.camera.capture(true);
 ```
 
-#### setFlashMode
+#### setFlashMode - must have the wanted camera capture reference
 
 Set flash mode (`auto`/`on`/`off`)
 
@@ -128,7 +128,7 @@ Set flash mode (`auto`/`on`/`off`)
 const success = await this.camera.setFlashMode(newFlashData.mode);
 ```
 
-#### changeCamera
+#### changeCamera - must have the wanted camera capture reference
 
 Change to fornt/rear camera
 
@@ -136,9 +136,9 @@ Change to fornt/rear camera
 const success = await this.camera.changeCamera();
 ```
 
-### CameraKitGalleryView
+### CameraKitGalleryView - Gallery grid component
 
-Native Gallery View (based on `UICollectionView`)
+Native Gallery View (based on `UICollectionView`(iOS) and ` RecyclerView` (Android))
 
 ![](img/camerakitgalleryview.png)
 
@@ -151,7 +151,7 @@ Native Gallery View (based on `UICollectionView`)
   albumName={<ALBUM_NAME>}
   columnCount={3}
   onTapImage={event => {
-    // result.nativeEvent.selected - ALL selected images Photos Framework ids
+    // event.nativeEvent.selected - ALL selected images ids
   }}
   selectedImages={<MAINTAIN_SELECETED_IMAGES>}
   selectedImageIcon={require('<IMAGE_FILE_PATH>'))}
@@ -161,34 +161,68 @@ Native Gallery View (based on `UICollectionView`)
 
 Attribute | Values | Description
 -------- | ----- | ------------
-minimumInteritemSpacing | Float             | Minimum inner Item spacing
-minimumLineSpacing      | Float             | Minimum line spacing
-imageStrokeColor        | Color             | Image stroke color
-albumName               | String            | Album name to show
-columnCount             | Integer           | How many clumns in one row
-onTapImage              | Function          | Callback when image tapped
-selectedImages          | Array             | Selected images (will show the selected badge)
-selectedImageIcon       | `require(_PATH_)` | - _DEPRECATED_ use Selection - Selected image badge image
-unSelectedImageIcon     | `require(_PATH_)` | - _DEPRECATED_ use Selection - Unselected image badge image
-selection               | Object            |   See Selection section
-getUrlOnTapImage        | Boolean           | iOS only - On image tap return the image internal  (tmp folder) uri (intead of `Photos.framework` asset id)
-customButtonStyle       | Object            | See Custom Button section
-onCustomButtonPress     | Function          | Callback when custom button tapped
-contentInset (iOS)      | Object            | The amount by which the gellery view content is inset from its edges (similar to `ScrollView` contentInset)
+`minimumInteritemSpacing`        | Float             | Minimum inner Item spacing
+`minimumLineSpacing`             | Float             | Minimum line spacing
+`imageStrokeColor`               | Color             | Image stroke color
+`albumName`                      | String            | Album name to show
+`columnCount`                    | Integer           | How many clumns in one row
+`onTapImage`                     | Function          | Callback when image tapped
+`selectedImages`                 | Array             | Selected images (will show the selected badge)
+`selectedImageIcon`              | `require(_PATH_)` | - _DEPRECATED_ use Selection - Selected image badge image
+`unSelectedImageIcon`            | `require(_PATH_)` | - _DEPRECATED_ use Selection - Unselected image badge image
+`selection`                      | Object            | See [Selection section](#selection)
+`getUrlOnTapImage`               | Boolean           | iOS only - On image tap return the image internal  (tmp folder) uri (intead of `Photos.framework` asset id)
+`customButtonStyle`              | Object            | See [Custom Button](#custom-button) section
+`onCustomButtonPress`            | Function          | Callback when custom button tapped
+`contentInset` (iOS)             | Object            | The amount by which the gellery view content is inset from its edges (similar to `ScrollView` contentInset)
+`remoteDownloadIndicatorType`    | String (`'spinner'` / `'progress-bar'` / `'progress-pie'`) | iOS only - see [Images stored in iCloud](#images-stored-in-iCloud)
+`remoteDownloadIndicatorColor`   | Color             | iOS only - Color of the remote download indicator to show  
+`onRemoteDownloadChanged`        | Function          | iOS only - Callback when the device curentlly download remote image stored in the iCloud.
 
 #### Custom Button
 
 Attribute | Values | Description
 -------- | ----- | ------------
-image | `require(_PATH_)` | Custom button image
-backgroundColor | Color | Custom button background color
+`image` | `require(_PATH_)` | Custom button image
+`backgroundColor` | Color | Custom button background color
 
 #### Selection
 
 Attribute | Values | Description
 -------- | ----- | ------------
-selectedImage |`require(_PATH_)`|Selected image badge image
-unselectedImage |`require(_PATH_)`|Unselected image badge image
-imagePosition |`bottom/top-right/left` / `center`|  Selected/Unselected badge image position (Default:`top-right`)
-overlayColor |Color| Image selected overlay color
-imageSizeAndroid |`large`/`medium`| Android Only - Selected badge image size
+`selectedImage` |`require(_PATH_)`|Selected image badge image
+`unselectedImage` |`require(_PATH_)`|Unselected image badge image
+`imagePosition` |`bottom/top-right/left` / `center`|  Selected/Unselected badge image position (Default:`top-right`)
+`overlayColor` |Color| Image selected overlay color
+`imageSizeAndroid` |`large`/`medium`| Android Only - Selected badge image size
+
+#### Images stored in iCloud 
+On iOS images can be stored in iCould if the device is **low on space** which means full-resolution photos automatically replaced with optimized version and full resolution versions are stored in iCloud.
+
+In this case, we need to download the image from iCloud and *Photos Framework* by Apple does a great job. Downloading take time and we deal with UI, so we need to show loading/progress indicator. 
+In order to do so, we provide 3 types of loading/progress inidcators:
+
+Sets `remoteDownloadIndicatorType` prop (and `remoteDownloadIndicatorColor` in order to sets the Color) on CameraKitGalleryView:
+
+Attribute | Values
+-------- | :-----:
+ `'spinner'`     | ![](img/spinner.png)
+ `'progress-bar'`| ![](img/progressBar.png)
+ `'progress-pie'`| ![](img/pie.png)
+ 
+ >In order to simulate this loading behaviour, since reach low on storage situation is hard, add this prop `iCloudDownloadSimulateTime={TIME_IN_SECONDS}`, just **DO NOT FORGET TO REMOVE IT**.
+
+## QR Code 
+
+Want/Need QR Code support embed in this package, please vote [HERE](https://github.com/wix/react-native-camera-kit/issues/60) 
+
+
+## Credits
+
+* [M13ProgressSuite](https://github.com/Marxon13/M13ProgressSuite) component by Marxon13 - A suite containing many tools to display progress information on iOS.
+
+## License
+
+The MIT License.
+
+See [LICENSE](LICENSE)

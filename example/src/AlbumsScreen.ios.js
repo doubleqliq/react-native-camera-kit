@@ -1,28 +1,22 @@
 import React, {Component} from 'react';
 import {
-  AppRegistry,
   StyleSheet,
   Text,
   View,
   ListView,
   TouchableOpacity,
   Image,
-  AlertIOS,
-  Dimensions,
   Switch
 } from 'react-native';
 
 import {
   CameraKitGallery,
-  CameraKitCamera,
   CameraKitGalleryView
 } from 'react-native-camera-kit';
 import _ from 'lodash';
 
-import GalleryScreen from './GalleryScreen';
 import CameraScreen from './CameraScreen';
 
-const {height, width} = Dimensions.get('window');
 
 export default class AlbumsScreen extends Component {
   
@@ -91,19 +85,19 @@ export default class AlbumsScreen extends Component {
             this.imageTapped(result.nativeEvent.selected);
           }}
           selection={{
-            selectedImage: require('./images/selected.png'),
+            selectedImage: require('../images/selected.png'),
             imageSizeAndroid: 'large',
             overlayColor: '#ecf0f1aa'
           }}
           fileTypeSupport={{
             unsupportedOverlayColor: "#00000055",
-            unsupportedImage: require('./images/unsupportedImage.png'),
+            unsupportedImage: require('../images/unsupportedImage.png'),
             unsupportedText: 'Unsupported',
             unsupportedTextColor: '#ffffff'
           }}
           imageStrokeColor={'#edeff0'}
           customButtonStyle={{
-            image: require('./images/openCamera.png'),
+            image: require('../images/openCamera.png'),
             backgroundColor: '#f2f4f5'
           }}
           onCustomButtonPress={(result) => {
@@ -150,7 +144,6 @@ export default class AlbumsScreen extends Component {
   }
   
   onCustomButtonPressed() {
-    console.log('RANG', 'custom button pressed');
     this.setState({shouldRenderCameraScreen: true});
   }
   

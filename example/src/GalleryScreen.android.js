@@ -1,15 +1,4 @@
 import React, {Component} from 'react';
-import {
-    AppRegistry,
-    Text,
-    View,
-    ListView,
-    TouchableOpacity,
-    Image,
-    AlertIOS,
-    CameraRoll,
-    Dimensions
-} from 'react-native';
 
 import {
     CameraKitGalleryView
@@ -17,9 +6,7 @@ import {
 
 import CameraScreen from './CameraScreen';
 
-const resolveAssetSource = require('react-native/Libraries/Image/resolveAssetSource');
-
-export default class GalleryScreenNative extends Component {
+export default class GalleryScreen extends Component {
 
   constructor(props) {
     super(props);
@@ -50,7 +37,7 @@ export default class GalleryScreenNative extends Component {
             }}
             onTapImage={this.onTapImage.bind(this)}
             selection={{
-              selectedImage: require('./images/selected.png'),
+              selectedImage: require('../images/selected.png'),
               imagePosition: 'bottom-right',
               imageSizeAndroid: 'large',
               enable: (Object.keys(this.state.images).length < 3)
@@ -58,12 +45,12 @@ export default class GalleryScreenNative extends Component {
             fileTypeSupport={{
                 supportedFileTypes: ['image/jpeg'],
                 unsupportedOverlayColor: "#00000055",
-                unsupportedImage: require('./images/unsupportedImage.png'),
+                unsupportedImage: require('../images/unsupportedImage.png'),
                 //unsupportedText: 'JPEG!!',
                 unsupportedTextColor: '#ff0000'
             }}
             customButtonStyle={{
-                image: require('./images/openCamera.png'),
+                image: require('../images/openCamera.png'),
                 backgroundColor: '#06c4e9'
             }}
             onCustomButtonPress={() => this.setState({shouldRenderCameraScreen: true})}

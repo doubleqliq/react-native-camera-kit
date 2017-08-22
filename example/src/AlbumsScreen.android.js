@@ -1,21 +1,15 @@
 import React, { Component } from 'react';
 import {
-    AppRegistry,
     StyleSheet,
     Text,
     View,
     ListView,
     TouchableOpacity,
-    Image,
-    //AlertIOS
+    Image
 } from 'react-native';
-
-//import _ from 'lodash';
-//import Immutable from 'seamless-immutable';
 
 import {
     CameraKitGallery,
-    //CameraKitCamera,
 } from 'react-native-camera-kit';
 
 import GalleryScreen from './GalleryScreen';
@@ -87,18 +81,12 @@ export default class AlbumsScreen extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    //justifyContent: 'center',
-    //alignItems: 'center',
     backgroundColor: '#F5FCFF',
     marginTop: 20
   },
   listView: {
-    //flex:1,
-    //flexDirection:'column',
     margin: 8,
     backgroundColor: '#D6DAC2'
-    //alignSelf: 'stretch'
-
   }
 });
 

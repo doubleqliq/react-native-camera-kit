@@ -17,6 +17,8 @@ import com.facebook.react.uimanager.UIManagerModule;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -170,7 +172,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
     class CustomButtonViewHolder extends AbsViewHolder implements View.OnClickListener {
 
         CustomButtonViewHolder() {
-            super(new ImageView(GalleryAdapter.this.view.getContext()));
+            super(new ImageView(GalleryAdapter.this.reactContext.getApplicationContext()));
 
             final ImageView imageView = (ImageView) this.itemView;
             imageView.setScaleType(ImageView.ScaleType.CENTER);
@@ -207,13 +209,16 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
     private int customButtonBackgroundColor = DEFAULT_CUSTOM_BUTTON_BACKGROUND_COLOR;
     private boolean enableSelection = true;
 
+    private final GalleryView galleryView;
+    private final ReactContext reactContext;
+    private final ThreadPoolExecutor executor;
+
     private boolean isDirty = true;
     private ArrayList<Image> images = new ArrayList<>();
-    private GalleryView view;
-    private ThreadPoolExecutor executor;
 
-    public GalleryAdapter(GalleryView view) {
-        this.view = view;
+    public GalleryAdapter(ReactContext reactContext, GalleryView galleryView) {
+        this.reactContext = reactContext;
+        this.galleryView = galleryView;
         setHasStableIds(true);
         int cores = Runtime.getRuntime().availableProcessors();
         executor = new ThreadPoolExecutor(cores, cores, 1, TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
@@ -329,7 +334,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
             args = new String[]{albumName};
         }
 
-        Cursor cursor = view.getContext().getContentResolver().query(
+        Cursor cursor = reactContext.getApplicationContext().getContentResolver().query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 PROJECTION,
                 selection,
@@ -369,19 +374,19 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
     }
 
     private void notifyItemsLoaded(final int preCount, final int postCount) {
-        view.post(new Runnable() {
+        reactContext.runOnUiQueueThread(new Runnable() {
             @Override
             public void run() {
-                if (!view.isComputingLayout()) {
+                if (!galleryView.isComputingLayout()) {
                     if (preCount == 0) {
                         notifyItemRangeInserted(0, postCount);
                     } else {
-                        view.swapAdapter(GalleryAdapter.this, true);
+                        galleryView.swapAdapter(GalleryAdapter.this, true);
                     }
                     // http://stackoverflow.com/a/42549611/453052
-                    view.scrollBy(0, 0);
+                    galleryView.scrollBy(0, 0);
                 } else {
-                    view.postDelayed(new Runnable() {
+                    new Timer().schedule(new TimerTask() {
                         @Override
                         public void run() {
                             notifyItemsLoaded(preCount, postCount);
@@ -395,7 +400,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
     @Override
     public AbsViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         if (viewType == VIEW_TYPE_IMAGE) {
-            SelectableImage v = new SelectableImage(view.getContext(), selectedDrawableGravity, selectedDrawableSize);
+            SelectableImage v = new SelectableImage(reactContext, selectedDrawableGravity, selectedDrawableSize);
             v.setScaleType(ImageView.ScaleType.CENTER_CROP);
             v.setBackgroundColor(Color.LTGRAY);
             return new ImageHolder(v);
@@ -428,21 +433,18 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.AbsViewH
     }
 
     public void onLongPress(String uri, Integer width, Integer height, Long date, Double latitude, Double longitude, boolean touchEnd) {
-        final ReactContext reactContext = ((ReactContext) view.getContext());
         reactContext.getNativeModule(UIManagerModule.class).getEventDispatcher().dispatchEvent(new LongPressImageEvent(getRootViewId(), uri, width, height, date, latitude, longitude, touchEnd));
     }
 
     public void onTapImage(String uri, Integer width, Integer height, Long date, Double latitude, Double longitude) {
-        final ReactContext reactContext = ((ReactContext) view.getContext());
         reactContext.getNativeModule(UIManagerModule.class).getEventDispatcher().dispatchEvent(new TapImageEvent(getRootViewId(), uri, width, height, date, latitude, longitude));
     }
 
     public void onTapCustomButton() {
-        final ReactContext reactContext = ((ReactContext) view.getContext());
         reactContext.getNativeModule(UIManagerModule.class).getEventDispatcher().dispatchEvent(new TapCustomButtonEvent(getRootViewId()));
     }
 
     private int getRootViewId() {
-        return view.getId();
+        return galleryView.getId();
     }
 }

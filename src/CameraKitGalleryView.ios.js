@@ -61,6 +61,6 @@ export default class CameraKitGalleryView extends Component {
   }
 
   unselectImage(uri) {
-   // skip for iOS for a while
+    GalleryViewManager.unselectImage(uri);
   }
 }

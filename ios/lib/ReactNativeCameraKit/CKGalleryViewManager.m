@@ -29,7 +29,7 @@
 typedef void (^CompletionBlock)(BOOL success);
 
 
-@interface CKGalleryView : UIView <UICollectionViewDelegateFlowLayout, UICollectionViewDataSource>
+@interface CKGalleryView : UIView <UICollectionViewDelegateFlowLayout, UICollectionViewDataSource, UIGestureRecognizerDelegate>
 
 //props
 @property (nonatomic, strong) NSString *albumName;
@@ -40,6 +40,7 @@ typedef void (^CompletionBlock)(BOOL success);
 @property (nonatomic, strong) NSNumber *autoSyncSelection;
 @property (nonatomic, strong) NSString *imageQualityOnTap;
 @property (nonatomic, copy) RCTDirectEventBlock onTapImage;
+@property (nonatomic, copy) RCTDirectEventBlock onLongPressImage;
 @property (nonatomic, copy) RCTDirectEventBlock onRemoteDownloadChanged;
 
 
@@ -52,6 +53,7 @@ typedef void (^CompletionBlock)(BOOL success);
 @property (nonatomic, strong) PHImageRequestOptions *imageRequestOptions;
 
 @property (nonatomic, strong) PHFetchOptions *fetchOptions;
+@property (nonatomic, strong) PHAsset *selectedAsset;
 @property (nonatomic, strong) NSString *selectedBase64Image;
 @property (nonatomic, strong) UIImage *selectedImageIcon;
 @property (nonatomic, strong) UIImage *unSelectedImageIcon;
@@ -149,6 +151,14 @@ static NSString * const CustomCellReuseIdentifier = @"CustomCell";
         [self.collectionView registerClass:[CKGalleryCustomCollectionViewCell class] forCellWithReuseIdentifier:CustomCellReuseIdentifier];
         [self addSubview:self.collectionView];
         self.collectionView.backgroundColor = [UIColor whiteColor];
+        
+        // attach long press gesture to collectionView
+        UILongPressGestureRecognizer *lpgr
+        = [[UILongPressGestureRecognizer alloc]
+           initWithTarget:self action:@selector(handleLongPress:)];
+        lpgr.delegate = self;
+        lpgr.delaysTouchesBegan = YES;
+        [self.collectionView addGestureRecognizer:lpgr];
     }
     else {
         self.collectionView.frame = self.bounds;
@@ -597,6 +607,24 @@ static NSString * const CustomCellReuseIdentifier = @"CustomCell";
 
 #pragma mark - misc
 
+-(void)handleLongPress:(UILongPressGestureRecognizer *)gestureRecognizer
+{
+    if (gestureRecognizer.state == UIGestureRecognizerStateBegan)
+    {
+        CGPoint p = [gestureRecognizer locationInView:self.collectionView];
+        
+        NSIndexPath *indexPath = [self.collectionView indexPathForItemAtPoint:p];
+        if (indexPath != nil){
+            NSInteger galleryDataIndex = indexPath.row;
+            NSMutableDictionary *assetDictionary = (NSMutableDictionary*)self.galleryData.data[galleryDataIndex];
+            self.selectedAsset = assetDictionary[@"asset"];
+            [self onLongPressImage:self.selectedAsset touchEnd:NO];
+        }
+    } else if (gestureRecognizer.state == UIGestureRecognizerStateEnded && self.selectedAsset) {
+        [self onLongPressImage:self.selectedAsset touchEnd:YES];
+        self.selectedAsset = nil;
+    }
+}
 
 -(void)onSelectChanged:(PHAsset*)asset isSelected:(BOOL)isSelected{
     if (self.onTapImage) {
@@ -607,9 +635,31 @@ static NSString * const CustomCellReuseIdentifier = @"CustomCell";
         BOOL shouldReturnUrl = self.getUrlOnTapImage ? [self.getUrlOnTapImage boolValue] : NO;
         NSNumber *isSelectedNumber = [NSNumber numberWithBool:isSelected];
         if (shouldReturnUrl) {
-            PHImageRequestOptions *imageRequestOptions = [[PHImageRequestOptions alloc] init];
-            imageRequestOptions.synchronous = YES;
-            NSDictionary *info = [CKGalleryViewManager infoForAsset:asset imageRequestOptions:imageRequestOptions imageQuality:self.imageQualityOnTap];
+            BOOL isVideo = asset.mediaType == PHAssetMediaTypeVideo;
+            NSDictionary *info;
+            if (isVideo)
+            {
+                PHVideoRequestOptions *videoRequestOptions = [[PHVideoRequestOptions alloc] init];
+                [CKGalleryViewManager infoForAsset:asset videoRequestOptions:videoRequestOptions resultHandler:^(NSDictionary * _Nullable info) {
+                    NSString *uriString = info[@"uri"];
+                    NSString *preview = info[@"preview"];
+                    
+                    if (uriString) {
+                        [imageTapInfo addEntriesFromDictionary:@{@"selected": uriString, @"selectedId": asset.localIdentifier, @"isSelected": isSelectedNumber, @"preview": preview}];
+                        self.onTapImage(imageTapInfo);
+                    }
+                    else {
+                        self.onTapImage(@{@"Error": @"Could not get image uri"});
+                    }
+                }];
+                return;
+            }
+            else
+            {
+                PHImageRequestOptions *imageRequestOptions = [[PHImageRequestOptions alloc] init];
+                imageRequestOptions.synchronous = YES;
+                info = [CKGalleryViewManager infoForAsset:asset imageRequestOptions:imageRequestOptions imageQuality:self.imageQualityOnTap];
+            }
             NSString *uriString = info[@"uri"];
             
             if (uriString) {
@@ -628,6 +678,67 @@ static NSString * const CustomCellReuseIdentifier = @"CustomCell";
     }
 }
 
+-(void)onLongPressImage:(PHAsset*)asset touchEnd:(BOOL)touchEnd{
+    if (self.onLongPressImage) {
+        
+        CLLocation *loc = asset.location;
+        NSMutableDictionary *imageTapInfo = [@{@"width": [NSNumber numberWithUnsignedInteger:asset.pixelWidth],
+                                               @"height": [NSNumber numberWithUnsignedInteger:asset.pixelHeight],
+                                               @"timestamp": @(asset.creationDate.timeIntervalSince1970),
+                                               @"touchEnd": @(touchEnd),
+                                               @"location": loc ? @{
+                                                   @"latitude": @(loc.coordinate.latitude),
+                                                   @"longitude": @(loc.coordinate.longitude),
+                                                   @"altitude": @(loc.altitude),
+                                                   @"heading": @(loc.course),
+                                                   @"speed": @(loc.speed),
+                                                   } : @{},
+                                               } mutableCopy];
+        
+        BOOL shouldReturnUrl = self.getUrlOnTapImage ? [self.getUrlOnTapImage boolValue] : NO;
+        if (shouldReturnUrl) {
+            BOOL isVideo = asset.mediaType == PHAssetMediaTypeVideo;
+            NSDictionary *info;
+            if (isVideo)
+            {
+                PHVideoRequestOptions *videoRequestOptions = [[PHVideoRequestOptions alloc] init];
+                [CKGalleryViewManager infoForAsset:asset videoRequestOptions:videoRequestOptions resultHandler:^(NSDictionary * _Nullable info) {
+                    NSString *uriString = info[@"uri"];
+                    NSString *preview = info[@"preview"];
+                    
+                    if (uriString) {
+                        [imageTapInfo addEntriesFromDictionary:@{@"selected": uriString, @"selectedId": asset.localIdentifier, @"preview": preview}];
+                        self.onLongPressImage(imageTapInfo);
+                    }
+                    else {
+                        self.onLongPressImage(@{@"Error": @"Could not get image uri"});
+                    }
+                }];
+                return;
+            }
+            else
+            {
+                PHImageRequestOptions *imageRequestOptions = [[PHImageRequestOptions alloc] init];
+                imageRequestOptions.synchronous = YES;
+                info = [CKGalleryViewManager infoForAsset:asset imageRequestOptions:imageRequestOptions imageQuality:self.imageQualityOnTap];
+            }
+            NSString *uriString = info[@"uri"];
+            
+            if (uriString) {
+                [imageTapInfo addEntriesFromDictionary:@{@"selected": uriString, @"selectedId": asset.localIdentifier}];
+                self.onLongPressImage(imageTapInfo);
+            }
+            else {
+                self.onLongPressImage(@{@"Error": @"Could not get image uri"});
+            }
+            
+        }
+        else {
+            [imageTapInfo addEntriesFromDictionary:@{@"selected":asset.localIdentifier, @"touchEnd": @(touchEnd)}];
+            self.onLongPressImage(imageTapInfo);
+        }
+    }
+}
 
 +(PHFetchResult*)filterFetchResults:(PHFetchResult*)fetchResults typesArray:(NSArray*)typesArray {
     
@@ -667,6 +778,7 @@ RCT_EXPORT_VIEW_PROPERTY(minimumLineSpacing, NSNumber);
 RCT_EXPORT_VIEW_PROPERTY(minimumInteritemSpacing, NSNumber);
 RCT_EXPORT_VIEW_PROPERTY(columnCount, NSNumber);
 RCT_EXPORT_VIEW_PROPERTY(onTapImage, RCTDirectEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onLongPressImage, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(selectedImageIcon, UIImage);
 RCT_EXPORT_VIEW_PROPERTY(unSelectedImageIcon, UIImage);
 RCT_EXPORT_VIEW_PROPERTY(selectedImages, NSArray);
@@ -831,5 +943,46 @@ RCT_EXPORT_METHOD(unselectImage:(NSString*)uri) {
     return assetInfoDict;
 }
 
++(void)infoForAsset:(PHAsset*)asset
+videoRequestOptions:(PHVideoRequestOptions*)videoRequestOptions
+      resultHandler:(void (^)(NSDictionary *__nullable info))resultHandler {
+    
+    NSError *error = nil;
+    NSURL *directoryURL = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]] isDirectory:YES];
+    
+    [[NSFileManager defaultManager] createDirectoryAtURL:directoryURL withIntermediateDirectories:YES attributes:nil error:&error];
+    
+    if (error) {
+        //NSLog(@"ERROR while creating directory:%@",error);
+    }
+    
+    [[PHCachingImageManager defaultManager] requestAVAssetForVideo:asset options:videoRequestOptions resultHandler:^(AVAsset * _Nullable asset, AVAudioMix * _Nullable audioMix, NSDictionary * _Nullable info) {
+        AVURLAsset *videoAsset = (AVURLAsset*)asset;
+        NSMutableDictionary *assetInfoDict = [[NSMutableDictionary alloc] init];
+        assetInfoDict[@"uri"] = videoAsset.URL.absoluteString;
+        assetInfoDict[@"asset"] = asset;
+        
+        
+        
+        AVAssetImageGenerator *imageGenerator = [[AVAssetImageGenerator alloc]initWithAsset:videoAsset];
+        imageGenerator.appliesPreferredTrackTransform = true;
+        CMTime time = kCMTimeZero;
+        CGImageRef imageRef = [imageGenerator copyCGImageAtTime:time actualTime:NULL error:NULL];
+        UIImage *thumbnail = [UIImage imageWithCGImage:imageRef];
+        CGImageRelease(imageRef);
+        
+        NSData *imgData = UIImageJPEGRepresentation(thumbnail, 1);
+        
+        NSString *fileName = [[NSProcessInfo processInfo] globallyUniqueString];
+        NSString *fullPath = [[NSTemporaryDirectory() stringByAppendingString:fileName] stringByAppendingString:@".jpg"];
+        
+        [imgData writeToFile:fullPath atomically:YES];
+        
+        
+        assetInfoDict[@"preview"] = fullPath;
+        resultHandler(assetInfoDict);
+    }];
+    
+}
 
 @end

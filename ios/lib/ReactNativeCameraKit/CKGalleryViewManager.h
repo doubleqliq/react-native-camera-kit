@@ -24,6 +24,8 @@
 +(NSMutableDictionary*)infoForAsset:(PHAsset*)asset
                 imageRequestOptions:(PHImageRequestOptions*)imageRequestOptions
                        imageQuality:(NSString*)imageQuality;
-
++(void)infoForAsset:(PHAsset*)asset
+                videoRequestOptions:(PHVideoRequestOptions*)videoRequestOptions
+                        resultHandler:(void (^_Nullable)(NSDictionary *__nullable info))resultHandler;
 
 @end

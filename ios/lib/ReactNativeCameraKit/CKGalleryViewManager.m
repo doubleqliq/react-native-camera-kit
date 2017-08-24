@@ -977,12 +977,13 @@ videoRequestOptions:(PHVideoRequestOptions*)videoRequestOptions
         //NSLog(@"ERROR while creating directory:%@",error);
     }
     
-    [[PHCachingImageManager defaultManager] requestAVAssetForVideo:asset options:videoRequestOptions resultHandler:^(AVAsset * _Nullable asset, AVAudioMix * _Nullable audioMix, NSDictionary * _Nullable info) {
+    [[PHImageManager defaultManager] requestAVAssetForVideo:asset options:videoRequestOptions resultHandler:^(AVAsset * _Nullable asset, AVAudioMix * _Nullable audioMix, NSDictionary * _Nullable info) {
+        
+        NSURL *url = (NSURL*)[[(AVURLAsset *)asset URL] fileReferenceURL];
         AVURLAsset *videoAsset = (AVURLAsset*)asset;
         NSMutableDictionary *assetInfoDict = [[NSMutableDictionary alloc] init];
-        assetInfoDict[@"uri"] = videoAsset.URL.absoluteString;
+        assetInfoDict[@"uri"] = [url absoluteString];
         assetInfoDict[@"asset"] = asset;
-        
         
         
         AVAssetImageGenerator *imageGenerator = [[AVAssetImageGenerator alloc]initWithAsset:videoAsset];

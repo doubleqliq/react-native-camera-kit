@@ -220,6 +220,7 @@ static NSString * const CustomCellReuseIdentifier = @"CustomCell";
 }
 
 -(void)setSelection:(NSDictionary *)selection {
+    _selection = selection;
     [CKGalleryCollectionViewCell setSelection:selection];
 }
 
@@ -551,6 +552,16 @@ static NSString * const CustomCellReuseIdentifier = @"CustomCell";
         NSDictionary *assetDictionary = (NSDictionary*)self.galleryData.data[galleryDataIndex];
         ckCell.isSelected = ((NSNumber*)assetDictionary[@"isSelected"]).boolValue;
     }
+}
+
+- (BOOL)collectionView:(UICollectionView *)collectionView shouldSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+    NSDictionary *assetDictionary = (NSDictionary*)self.galleryData.data[indexPath.row];
+    BOOL isSelected = [assetDictionary[@"isSelected"] boolValue];
+    BOOL canSelect = [self.selection[@"enable"] boolValue];
+    if (isSelected && !canSelect) {
+        return YES;
+    }
+    return canSelect;
 }
 
 -(BOOL)isSelectionDirty:(NSMutableArray *)newSelectedImages {

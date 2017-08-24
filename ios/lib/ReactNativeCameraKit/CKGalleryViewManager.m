@@ -110,9 +110,10 @@ static NSString * const CustomCellReuseIdentifier = @"CustomCell";
 
 -(PHFetchOptions *)fetchOptions {
     if (!_fetchOptions) {
+        NSInteger mediaType = [self.albumName isEqualToString:@"Videos"] ? PHAssetMediaTypeVideo : PHAssetMediaTypeImage;
         PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
         fetchOptions.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:NO]];
-        fetchOptions.predicate = [NSPredicate predicateWithFormat:@"mediaType = %d",PHAssetMediaTypeImage];
+        fetchOptions.predicate = [NSPredicate predicateWithFormat:@"mediaType = %d",mediaType];
         
         _fetchOptions = fetchOptions;
     }
@@ -176,6 +177,7 @@ static NSString * const CustomCellReuseIdentifier = @"CustomCell";
 -(void)upadateCollectionView:(PHFetchResult*)fetchResults animated:(BOOL)animated {
     
     self.galleryData = [[GalleryData alloc] initWithFetchResults:fetchResults selectedImagesIds:self.selectedImages];
+    NSIndexPath *indexPath = [NSIndexPath indexPathForRow: [self.galleryData.data count] - 1 inSection:0];
     
     if (animated) {
         
@@ -188,6 +190,7 @@ static NSString * const CustomCellReuseIdentifier = @"CustomCell";
     else {
         dispatch_async(dispatch_get_main_queue(), ^ {
             [self.collectionView reloadData];
+            [self.collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:UICollectionViewScrollPositionBottom animated:NO];
         });
     }
 }
@@ -280,8 +283,8 @@ static NSString * const CustomCellReuseIdentifier = @"CustomCell";
 
 -(void)setAlbumName:(NSString *)albumName {
     
-    
-    if ([albumName caseInsensitiveCompare:@"all photos"] == NSOrderedSame || !albumName || [albumName isEqualToString:@""]) {
+    _albumName = albumName;
+    if ([albumName caseInsensitiveCompare:@"all photos"] == NSOrderedSame || [albumName isEqualToString:@"Videos"] || !albumName || [albumName isEqualToString:@""]) {
         
         PHFetchResult *allPhotosFetchResults = [PHAsset fetchAssetsWithOptions:self.fetchOptions];
         [self upadateCollectionView:allPhotosFetchResults animated:(self.galleryData != nil)];
@@ -576,6 +579,21 @@ static NSString * const CustomCellReuseIdentifier = @"CustomCell";
     [self setAlbumName:self.albumName];
 }
 
+-(void)unselectAsset:(NSString*)uri {
+    for (int i = 0; i < [self.galleryData.data count]; i++) {
+        NSDictionary *assetDictionary = (NSDictionary*)self.galleryData.data[i];
+        PHAsset *asset = assetDictionary[@"asset"];
+        if ([asset.localIdentifier isEqualToString: uri]) {
+            NSIndexPath *indexPath = [NSIndexPath indexPathForRow:i inSection:0];
+            [assetDictionary setValue:NO forKey:@"isSelected"];
+            
+            dispatch_async(dispatch_get_main_queue(), ^ {
+                [self.collectionView reloadItemsAtIndexPaths:@[indexPath]];
+            });
+            break;
+        }
+    }
+}
 
 #pragma mark - misc
 
@@ -740,6 +758,10 @@ RCT_EXPORT_METHOD(modifyGalleryViewContentOffset:(NSDictionary*)params) {
         newOffset.y += [params[@"y"] floatValue];
     }
     [self.galleryView.collectionView setContentOffset:newOffset];
+}
+
+RCT_EXPORT_METHOD(unselectImage:(NSString*)uri) {
+    [self.galleryView unselectAsset:uri];
 }
 
 #pragma mark - Static functions

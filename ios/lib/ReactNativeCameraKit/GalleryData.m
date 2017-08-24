@@ -42,7 +42,7 @@
         [array addObject:assetDictionary];
     }
     
-    return array;
+    return [[array reverseObjectEnumerator] allObjects];
 }
 
 

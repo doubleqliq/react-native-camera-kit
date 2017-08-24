@@ -59,4 +59,8 @@ export default class CameraKitGalleryView extends Component {
   modifyGalleryViewContentOffset (offset) {
     GalleryViewManager.modifyGalleryViewContentOffset(offset);
   }
+
+  unselectImage(uri) {
+    GalleryViewManager.unselectImage(uri);
+  }
 }

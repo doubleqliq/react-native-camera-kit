@@ -779,6 +779,7 @@ static NSString * const CustomCellReuseIdentifier = @"CustomCell";
 @interface CKGalleryViewManager ()
 
 @property (nonatomic, strong) CKGalleryView *galleryView;
+@property (nonatomic, strong) CKGalleryView *videoView;
 
 @end
 
@@ -791,8 +792,12 @@ RCT_EXPORT_MODULE()
 
 - (UIView *)view
 {
-    self.galleryView = [[CKGalleryView alloc] init];
-    return self.galleryView;
+    if (!self.galleryView) {
+        self.galleryView = [[CKGalleryView alloc] init];
+        return self.galleryView;
+    }
+    self.videoView = [[CKGalleryView alloc] init];
+    return self.videoView;
 }
 
 
@@ -895,8 +900,12 @@ RCT_EXPORT_METHOD(modifyGalleryViewContentOffset:(NSDictionary*)params) {
     [self.galleryView.collectionView setContentOffset:newOffset];
 }
 
-RCT_EXPORT_METHOD(unselectImage:(NSString*)uri) {
-    [self.galleryView unselectAsset:uri];
+RCT_EXPORT_METHOD(unselectImage:(NSString*)uri viewType: (NSString*) viewType) {
+    if ([viewType isEqualToString:@"gallery"] || !viewType) {
+        [self.galleryView unselectAsset:uri];
+        return;
+    }
+    [self.videoView unselectAsset:uri];
 }
 
 #pragma mark - Static functions

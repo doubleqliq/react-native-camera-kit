@@ -61,6 +61,7 @@ export default class CameraKitGalleryView extends Component {
   }
 
   unselectImage(uri) {
-    GalleryViewManager.unselectImage(uri);
+    const viewType = this.props.albumName && this.props.albumName === VIDEOS ? VIDEOS : null;
+    GalleryViewManager.unselectImage(uri, viewType);
   }
 }

@@ -10,6 +10,7 @@ import {
 const GalleryView = requireNativeComponent('CKGalleryView', null);
 const GalleryViewManager = NativeModules.CKGalleryViewManager;
 const ALL_PHOTOS = 'All Photos';
+const VIDEOS = 'Videos';
 const DEFAULT_COLUMN_COUNT = 3;
 const resolveAssetSource = require('react-native/Libraries/Image/resolveAssetSource');
 

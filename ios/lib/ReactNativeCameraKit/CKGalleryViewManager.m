@@ -661,6 +661,7 @@ static NSString * const CustomCellReuseIdentifier = @"CustomCell";
             if (isVideo)
             {
                 PHVideoRequestOptions *videoRequestOptions = [[PHVideoRequestOptions alloc] init];
+                videoRequestOptions.version = PHVideoRequestOptionsVersionOriginal;
                 [CKGalleryViewManager infoForAsset:asset videoRequestOptions:videoRequestOptions resultHandler:^(NSDictionary * _Nullable info) {
                     NSString *uriString = info[@"uri"];
                     NSString *preview = info[@"preview"];
@@ -723,6 +724,7 @@ static NSString * const CustomCellReuseIdentifier = @"CustomCell";
             if (isVideo)
             {
                 PHVideoRequestOptions *videoRequestOptions = [[PHVideoRequestOptions alloc] init];
+                videoRequestOptions.version = PHVideoRequestOptionsVersionOriginal;
                 [CKGalleryViewManager infoForAsset:asset videoRequestOptions:videoRequestOptions resultHandler:^(NSDictionary * _Nullable info) {
                     NSString *uriString = info[@"uri"];
                     NSString *preview = info[@"preview"];
@@ -979,12 +981,10 @@ videoRequestOptions:(PHVideoRequestOptions*)videoRequestOptions
     
     [[PHImageManager defaultManager] requestAVAssetForVideo:asset options:videoRequestOptions resultHandler:^(AVAsset * _Nullable asset, AVAudioMix * _Nullable audioMix, NSDictionary * _Nullable info) {
         
-        NSURL *url = (NSURL*)[[(AVURLAsset *)asset URL] fileReferenceURL];
         AVURLAsset *videoAsset = (AVURLAsset*)asset;
         NSMutableDictionary *assetInfoDict = [[NSMutableDictionary alloc] init];
-        assetInfoDict[@"uri"] = [url absoluteString];
+        assetInfoDict[@"uri"] = videoAsset.URL.absoluteString;
         assetInfoDict[@"asset"] = asset;
-        
         
         AVAssetImageGenerator *imageGenerator = [[AVAssetImageGenerator alloc]initWithAsset:videoAsset];
         imageGenerator.appliesPreferredTrackTransform = true;

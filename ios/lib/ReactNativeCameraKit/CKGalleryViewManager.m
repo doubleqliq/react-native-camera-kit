@@ -317,6 +317,9 @@ static NSString * const CustomCellReuseIdentifier = @"CustomCell";
     
 }
 
+-(void) setUnselectAsset: (NSString *) unselectAsset {
+    [self unselectAsset:unselectAsset];
+}
 
 #pragma mark - UICollectionViewDataSource
 
@@ -808,6 +811,7 @@ RCT_EXPORT_VIEW_PROPERTY(columnCount, NSNumber);
 RCT_EXPORT_VIEW_PROPERTY(onTapImage, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onLongPressImage, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(selectedImageIcon, UIImage);
+RCT_EXPORT_VIEW_PROPERTY(unselectAsset, NSString);
 RCT_EXPORT_VIEW_PROPERTY(unSelectedImageIcon, UIImage);
 RCT_EXPORT_VIEW_PROPERTY(selectedImages, NSArray);
 RCT_EXPORT_VIEW_PROPERTY(fileTypeSupport, NSDictionary);

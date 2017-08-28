@@ -10,7 +10,6 @@ import {
 const GalleryView = requireNativeComponent('CKGalleryView', null);
 const GalleryViewManager = NativeModules.CKGalleryViewManager;
 const ALL_PHOTOS = 'All Photos';
-const VIDEOS = 'Videos';
 const DEFAULT_COLUMN_COUNT = 3;
 const resolveAssetSource = require('react-native/Libraries/Image/resolveAssetSource');
 
@@ -44,8 +43,10 @@ export default class CameraKitGalleryView extends Component {
       _.update(transformedProps, 'selection.overlayColor', (c) => processColor(c));
     }
 
-    return <GalleryView {...transformedProps}/>
+    return <GalleryView {...transformedProps} ref={this.catchGalleryViewRef}/>
   }
+
+  catchGalleryViewRef = (ref) => this._galleryView = ref;
 
   async getSelectedImages() {
     const selectedImages = await GalleryViewManager.getSelectedImages();
@@ -62,7 +63,8 @@ export default class CameraKitGalleryView extends Component {
   }
 
   unselectImage(uri) {
-    const viewType = this.props.albumName && this.props.albumName === VIDEOS ? VIDEOS : null;
-    GalleryViewManager.unselectImage(uri, viewType);
+    this._galleryView.setNativeProps({
+      unselectAsset: uri
+    });
   }
 }
